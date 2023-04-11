@@ -1,0 +1,17 @@
+{
+	"Name": "Auto_Cleaner",
+	"Description": "Auto_Cleaner",
+	"LoadPriority": 1,
+	"RequiredOnClient": false,
+	"Version": "1.0.0",
+
+	"Scripts": [
+		{
+			"Path": "Auto_Cleaner.nut",			
+			"RunOn": "SERVER && MP",						
+			"ServerCallback": {
+				"After": "AutoCleaner_Init"			
+			}
+		}
+	]
+}
