@@ -39,6 +39,7 @@ void function CleanUpLastNPC()
         return
     foreach (entity player in GetPlayerArray())
     {
+        print("开始60s清理倒计时")
         NSSendInfoMessageToPlayer( player, "偵測到預設敵人數量，已標記剩餘敵人位置，60秒后將會自動清除剩餘敵人" )
         StatusEffect_AddTimed( player, eStatusEffect.sonar_detected, 1.0, 3.0, 0.0) //让玩家画面显示“侦测到声纳”
         EmitSoundOnEntityOnlyToPlayer( player , player , "Burn_Card_Map_Hack_Radar_Pulse_V1_1P" )
@@ -59,6 +60,7 @@ void function CleanUpLastNPC()
     foreach ( entity npc in GetNPCArrayOfTeam( TEAM_IMC ))
     {
         print( npc )
+        print("清理完成")
         if( IsAlive( npc ))
             npc.Die()
     }
