@@ -23,6 +23,7 @@ bool function ClientCleanUpLastNPC( entity player, array<string> args )
 void function OnWaveInProgress()
 {
     StartWaveStateLoop()
+    TryCleanUpNPC()
 }
 
 void function StartWaveStateLoop()
