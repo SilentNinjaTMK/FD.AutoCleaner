@@ -1,4 +1,13 @@
+//待测试
 global function AutoCleaner_Init
+
+const int NPC_COUNT_DEFAULT =  5 //更改判定阈值（NPC数量）
+const int NPC_COUNT_SPECIAL =  1 //更改判定阈值（NPC数量）
+
+struct
+{
+    int npcLeftToClean = 1 // default
+} file
 
 void function AutoCleaner_Init() {
     AddCallback_GameStateEnter(eGameState.Playing, OnWaveInProgress)
@@ -13,7 +22,63 @@ bool function ClientCleanUpLastNPC( entity player, array<string> args )
 
 void function OnWaveInProgress()
 {
-    TryCleanUpNPC()
+    StartWaveStateLoop()
+}
+
+void function StartWaveStateLoop()
+{
+    thread StartWaveStateLoop_Threaded()
+}
+
+void function StartWaveStateLoop_Threaded()
+{
+    int lastWaveState //用于存上一个tick中的波次状态，要卸载while外面，防止下一次循环开始时被清空
+    bool firstLoop = true
+    while(true)
+    {
+        int currentWaveState = GetGlobalNetInt("FD_waveState") //当前tick的波次状态
+        bool waveStateChanged = currentWaveState != lastWaveState //检查波次是否更新
+
+        //回合即将开始判定
+        if(currentWaveState == WAVE_STATE_IN_PROGRESS)
+        {
+            if(waveStateChanged && !firstLoop)
+            {
+                int waveCount = GetGlobalNetInt("FD_currentWave")
+                switch (waveCount) //根据波次输出信息 0-5
+                {
+                    case 0:
+                        print("回合1开始")
+                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        break;
+                    case 1:
+                        print("回合2开始")
+                        file.npcLeftToClean = NPC_COUNT_SPECIAL
+                        break;
+                    case 2:
+                        print("回合3开始")
+                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        break;
+                    case 3:
+                        print("回合4开始")
+                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        break;
+                    case 4:
+                        print("回合5开始")
+                        file.npcLeftToClean = NPC_COUNT_SPECIAL
+                        break;
+                    case 5:
+                        print("回合6开始")
+                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        break;
+                }
+            }
+        }
+        firstLoop= false
+        lastWaveState = GetGlobalNetInt("FD_waveState") //更新tick
+
+        WaitFrame() //等待1tick直到下一个tick开始
+    }
 }
 
 void function TryCleanUpNPC()
@@ -26,7 +91,7 @@ void function TryCleanUpNPC_Thread()
     svGlobal.levelEnt.EndSignal( "GameStateChanged" )
     while( true )
     {
-        while( GetGlobalNetInt( "FD_AICount_Current" ) != 5) //更改npc存活数量
+        while( GetNPCArrayOfTeam( TEAM_IMC ).len() > file.npcLeftToClean && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
             WaitFrame()
         waitthread CleanUpLastNPC()
     }
