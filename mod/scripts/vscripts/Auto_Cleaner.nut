@@ -92,7 +92,7 @@ void function TryCleanUpNPC_Thread()
     svGlobal.levelEnt.EndSignal( "GameStateChanged" )
     while( true )
     {
-        if( GetGlobalNetInt( "FD_AICount_Current" ) <= file.npcLeftToClean && GetNPCArrayOfTeam( TEAM_IMC ) != 0 )
+        if( GetGlobalNetInt( "FD_AICount_Current" ) <= file.npcLeftToClean && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
             waitthread CleanUpLastNPC()
         WaitFrame()
     }
