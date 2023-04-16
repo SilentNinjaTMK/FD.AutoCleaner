@@ -54,7 +54,7 @@ void function StartWaveStateLoop_Threaded()
                         break;
                     case 1:
                         print("回合2开始")
-                        file.npcLeftToClean = NPC_COUNT_SPECIAL
+                        file.npcLeftToClean = NPC_COUNT_DEFAULT
                         break;
                     case 2:
                         print("回合3开始")
@@ -62,11 +62,11 @@ void function StartWaveStateLoop_Threaded()
                         break;
                     case 3:
                         print("回合4开始")
-                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.npcLeftToClean = NPC_COUNT_SPECIAL
                         break;
                     case 4:
                         print("回合5开始")
-                        file.npcLeftToClean = NPC_COUNT_SPECIAL
+                        file.npcLeftToClean = NPC_COUNT_DEFAULT
                         break;
                     case 5:
                         print("回合6开始")
@@ -92,9 +92,10 @@ void function TryCleanUpNPC_Thread()
     svGlobal.levelEnt.EndSignal( "GameStateChanged" )
     while( true )
     {
-        while( GetNPCArrayOfTeam( TEAM_IMC ).len() > file.npcLeftToClean && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
+        while( GetGlobalNetInt( "FD_AICount_Current" ) > file.npcLeftToClean && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
             WaitFrame()
         waitthread CleanUpLastNPC()
+        WaitFrame()
     }
 }
 
