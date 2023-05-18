@@ -1,12 +1,18 @@
 //待测试
 global function AutoCleaner_Init
 
-const int NPC_COUNT_DEFAULT =  5 //更改判定阈值（NPC数量）
-const int NPC_COUNT_SPECIAL =  1 //更改判定阈值（NPC数量）
+//更改判定阈值（NPC数量）
+const int NPC_COUNT_DEFAULT =  5
+const int NPC_COUNT_SPECIAL =  1
+
+//更改清除等待时间
+const int COUNTDOWN_DEFAULT = 60
+const int COUNTDOWN_SPECIAL = 10
 
 struct
 {
     int npcLeftToClean = 1 // default
+    int CleanTimeCount = 60
 } file
 
 void function AutoCleaner_Init() {
@@ -51,26 +57,32 @@ void function StartWaveStateLoop_Threaded()
                     case 0:
                         print("回合1开始")
                         file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.CleanTimeCount = COUNTDOWN_SPECIAL
                         break;
                     case 1:
                         print("回合2开始")
                         file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.CleanTimeCount = COUNTDOWN_DEFAULT
                         break;
                     case 2:
                         print("回合3开始")
                         file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.CleanTimeCount = COUNTDOWN_DEFAULT
                         break;
                     case 3:
                         print("回合4开始")
                         file.npcLeftToClean = NPC_COUNT_SPECIAL
+                        file.CleanTimeCount = COUNTDOWN_DEFAULT
                         break;
                     case 4:
                         print("回合5开始")
                         file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.CleanTimeCount = COUNTDOWN_DEFAULT
                         break;
                     case 5:
                         print("回合6开始")
                         file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.CleanTimeCount = COUNTDOWN_DEFAULT
                         break;
                 }
             }
@@ -105,8 +117,8 @@ void function CleanUpLastNPC()
         return
     foreach (entity player in GetPlayerArray())
     {
-        print("开始60s清理倒计时")
-        NSSendInfoMessageToPlayer( player, "偵測到預設敵人數量，已標記剩餘敵人位置，60秒后將會自動清除剩餘敵人" )
+        print("开始清理倒计时")
+        NSSendInfoMessageToPlayer( player, "偵測到預設敵人數量，已標記剩餘敵人位置，" + file.CleanTimeCount + "秒后將會自動清除剩餘敵人" )
         StatusEffect_AddTimed( player, eStatusEffect.sonar_detected, 1.0, 3.0, 0.0) //让玩家画面显示“侦测到声纳”
         // EmitSoundOnEntityOnlyToPlayer( player , player , "Burn_Card_Map_Hack_Radar_Pulse_V1_1P" )
     }
@@ -115,7 +127,7 @@ void function CleanUpLastNPC()
     {
         Highlight_SetEnemyHighlight( highlightnpc, "enemy_sonar" )
     }
-    float endTime = Time() + 60 //存储循环结束时间
+    float endTime = Time() + file.CleanTimeCount //存储循环结束时间
     while( Time() < endTime ) //当时间小于循环剩余时间时，保持等待
     {
         npcs = GetNPCArrayOfTeam( TEAM_IMC ) //持续更新npc数组
