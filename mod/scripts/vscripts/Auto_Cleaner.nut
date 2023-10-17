@@ -6,7 +6,7 @@ const int NPC_COUNT_DEFAULT =  5
 const int NPC_COUNT_SPECIAL =  1
 
 //更改清除等待时间
-const int COUNTDOWN_DEFAULT = 60
+const int COUNTDOWN_DEFAULT = 30
 const int COUNTDOWN_SPECIAL = 10
 
 struct
@@ -17,7 +17,7 @@ struct
 
 void function AutoCleaner_Init() {
     AddCallback_GameStateEnter(eGameState.Playing, OnWaveInProgress)
-    AddClientCommandCallback( "clean", ClientCleanUpLastNPC )
+    // AddClientCommandCallback( "clean", ClientCleanUpLastNPC )
 }
 
 bool function ClientCleanUpLastNPC( entity player, array<string> args )
