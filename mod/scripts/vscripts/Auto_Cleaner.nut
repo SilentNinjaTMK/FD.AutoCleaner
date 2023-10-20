@@ -1,9 +1,12 @@
 //待测试
 global function AutoCleaner_Init
+global function DeCloakGhostNPC
 
 //更改判定阈值（NPC数量）
-const int NPC_COUNT_DEFAULT =  5
-const int NPC_COUNT_SPECIAL =  1
+const int NPC_SHOWPOS_COUNT_DEFAULT =  10
+const int NPC_CLEAN_COUNT =  5
+const int NPC_SHOWPOS_COUNT_SPECIAL =  5
+const int NPC_CLEAN_SPECIAL =  1
 
 //更改清除等待时间
 const int COUNTDOWN_DEFAULT = 30
@@ -13,16 +16,24 @@ struct
 {
     int npcLeftToClean = 1 // default
     int CleanTimeCount = 60
+    int ShowAliveNPCsPosition = 10
 } file
 
 void function AutoCleaner_Init() {
     AddCallback_GameStateEnter(eGameState.Playing, OnWaveInProgress)
     // AddClientCommandCallback( "clean", ClientCleanUpLastNPC )
+    AddClientCommandCallback( "showpos", ClientShowAliveNPCsPosition )
 }
 
 bool function ClientCleanUpLastNPC( entity player, array<string> args )
 {
     thread CleanUpLastNPC()
+    return true
+}
+
+bool function ClientShowAliveNPCsPosition( entity player, array<string> args )
+{
+    thread ShowAliveNPCsPosition()
     return true
 }
 
@@ -56,33 +67,39 @@ void function StartWaveStateLoop_Threaded()
                 {
                     case 0:
                         print("回合1开始")
-                        file.npcLeftToClean = NPC_COUNT_DEFAULT
-                        file.CleanTimeCount = COUNTDOWN_SPECIAL
+                        file.npcLeftToClean = NPC_CLEAN_COUNT
+                        file.CleanTimeCount = COUNTDOWN_DEFAULT
+                        file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_DEFAULT
                         break;
                     case 1:
                         print("回合2开始")
-                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.npcLeftToClean = NPC_CLEAN_COUNT
                         file.CleanTimeCount = COUNTDOWN_DEFAULT
+                        file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_DEFAULT
                         break;
                     case 2:
                         print("回合3开始")
-                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.npcLeftToClean = NPC_CLEAN_COUNT
                         file.CleanTimeCount = COUNTDOWN_DEFAULT
+                        file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_DEFAULT
                         break;
                     case 3:
                         print("回合4开始")
-                        file.npcLeftToClean = NPC_COUNT_SPECIAL
+                        file.npcLeftToClean = NPC_SHOWPOS_COUNT_SPECIAL
                         file.CleanTimeCount = COUNTDOWN_DEFAULT
+                        file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_SPECIAL
                         break;
                     case 4:
                         print("回合5开始")
-                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.npcLeftToClean = NPC_CLEAN_COUNT
                         file.CleanTimeCount = COUNTDOWN_DEFAULT
+                        file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_DEFAULT
                         break;
                     case 5:
                         print("回合6开始")
-                        file.npcLeftToClean = NPC_COUNT_DEFAULT
+                        file.npcLeftToClean = NPC_CLEAN_COUNT
                         file.CleanTimeCount = COUNTDOWN_DEFAULT
+                        file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_DEFAULT
                         break;
                 }
             }
@@ -104,10 +121,61 @@ void function TryCleanUpNPC_Thread()
     svGlobal.levelEnt.EndSignal( "GameStateChanged" )
     while( true )
     {
+        if( file.npcLeftToClean < GetGlobalNetInt( "FD_AICount_Current" ) && GetGlobalNetInt( "FD_AICount_Current" ) <= file.ShowAliveNPCsPosition && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
+        {
+            waitthread ShowAliveNPCsPosition()
+        }
+        WaitFrame()
         if( GetGlobalNetInt( "FD_AICount_Current" ) <= file.npcLeftToClean && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
             waitthread CleanUpLastNPC()
         WaitFrame()
     }
+}
+
+void function ShowAliveNPCsPosition()
+{
+    array<entity> npcs = GetNPCArrayOfTeam( TEAM_IMC )
+    bool isShowAnnouncementToPlayer = false
+    if( npcs.len() < file.ShowAliveNPCsPosition )
+        return
+    if ( isShowAnnouncementToPlayer )
+        return
+    foreach (entity player in GetPlayerArray())
+    {
+        print("开始展示剩餘NPC位置")
+        NSSendInfoMessageToPlayer( player, "偵測到預設敵人數量，已全圖展示剩餘敵人位置" )
+        StatusEffect_AddTimed( player, eStatusEffect.sonar_detected, 1.0, 3.0, 0.0) //让玩家画面显示“侦测到声纳”
+        // EmitSoundOnEntityOnlyToPlayer( player , player , "Burn_Card_Map_Hack_Radar_Pulse_V1_1P" )
+        isShowAnnouncementToPlayer = true
+    }
+
+    foreach (entity highlightnpc in GetNPCArray())
+    {
+        Highlight_SetEnemyHighlight( highlightnpc, "enemy_sonar" )
+    }
+
+    while( file.npcLeftToClean < GetGlobalNetInt( "FD_AICount_Current" ) && GetGlobalNetInt( "FD_AICount_Current" ) <= file.ShowAliveNPCsPosition )
+    {
+        npcs = GetNPCArrayOfTeam( TEAM_IMC ) //持续更新npc数组
+        if( npcs.len() < file.ShowAliveNPCsPosition )
+            return
+        WaitFrame()
+    }
+}
+
+bool function DeCloakGhostNPC()
+{
+    svGlobal.levelEnt.EndSignal( "GameStateChanged" )
+    while( true )
+    {
+        wait 1
+        if( GetGameState() != eGameState.Playing )
+            continue
+        if( GetGlobalNetInt( "FD_AICount_Current" ) <= file.ShowAliveNPCsPosition && GetNPCArrayOfTeam( TEAM_IMC ).len() != 0 )
+            return true
+        break
+    }
+    return false
 }
 
 void function CleanUpLastNPC()
@@ -118,7 +186,7 @@ void function CleanUpLastNPC()
     foreach (entity player in GetPlayerArray())
     {
         print("开始清理倒计时")
-        NSSendInfoMessageToPlayer( player, "偵測到預設敵人數量，已標記剩餘敵人位置，" + file.CleanTimeCount + "秒后將會自動清除剩餘敵人" )
+        NSSendInfoMessageToPlayer( player, "偵測到預設敵人數量，" + file.CleanTimeCount + "秒后將會自動清除剩餘敵人" )
         StatusEffect_AddTimed( player, eStatusEffect.sonar_detected, 1.0, 3.0, 0.0) //让玩家画面显示“侦测到声纳”
         // EmitSoundOnEntityOnlyToPlayer( player , player , "Burn_Card_Map_Hack_Radar_Pulse_V1_1P" )
     }
