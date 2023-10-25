@@ -152,6 +152,7 @@ void function ShowAliveNPCsPosition()
     foreach (entity highlightnpc in GetNPCArray())
     {
         Highlight_SetEnemyHighlight( highlightnpc, "enemy_sonar" )
+        print( highlightnpc.GetClassName() + " " + highlightnpc.GetTitle() + " " + highlightnpc.GetOrigin() )
     }
 
     while( file.npcLeftToClean < GetGlobalNetInt( "FD_AICount_Current" ) && GetGlobalNetInt( "FD_AICount_Current" ) <= file.ShowAliveNPCsPosition )
