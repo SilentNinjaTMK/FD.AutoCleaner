@@ -1,6 +1,8 @@
 //待测试
 global function AutoCleaner_Init
 global function DeCloakGhostNPC
+global function CleanUpLastNPC
+global function ShowAliveNPCsPosition
 
 //更改判定阈值（NPC数量）
 const int NPC_SHOWPOS_COUNT_DEFAULT =  10
@@ -19,22 +21,10 @@ struct
     int ShowAliveNPCsPosition = 10
 } file
 
-void function AutoCleaner_Init() {
+void function AutoCleaner_Init()
+{
     AddCallback_GameStateEnter(eGameState.Playing, OnWaveInProgress)
-    // AddClientCommandCallback( "clean", ClientCleanUpLastNPC )
     AddClientCommandCallback( "showpos", ClientShowAliveNPCsPosition )
-}
-
-bool function ClientCleanUpLastNPC( entity player, array<string> args )
-{
-    thread CleanUpLastNPC()
-    return true
-}
-
-bool function ClientShowAliveNPCsPosition( entity player, array<string> args )
-{
-    thread ShowAliveNPCsPosition()
-    return true
 }
 
 void function OnWaveInProgress()
@@ -85,7 +75,7 @@ void function StartWaveStateLoop_Threaded()
                         break;
                     case 3:
                         print("回合4开始")
-                        file.npcLeftToClean = NPC_SHOWPOS_COUNT_SPECIAL
+                        file.npcLeftToClean = NPC_CLEAN_SPECIAL
                         file.CleanTimeCount = COUNTDOWN_DEFAULT
                         file.ShowAliveNPCsPosition = NPC_SHOWPOS_COUNT_SPECIAL
                         break;
